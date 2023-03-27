@@ -10,6 +10,7 @@ fn main() {
         .type_attribute(".cln.GetinfoBindingType", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.Amount", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.ListpeersResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListpeersPeers", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.ListpeersPeersLog", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.ListpeersPeersChannels", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.ListpeersPeersLogType", "#[derive(serde::Serialize)]")
