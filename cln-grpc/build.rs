@@ -43,6 +43,23 @@ fn main() {
             ".cln.ListpeersPeersChannelsHtlcsDirection",
             "#[derive(serde::Serialize)]",
         )
+        .type_attribute(".cln.ListfundsResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListfundsOutputs", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListfundsChannels", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListfundsOutputsStatus", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.NewaddrResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ChannelState", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ConnectDirection", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ConnectResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ConnectAddress", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ConnectAddressType", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.KeysendResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.KeysendStatus", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.FundchannelResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.PayResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.PayStatus", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.CreateinvoiceResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.CreateinvoiceStatus", "#[derive(serde::Serialize)]")
         .compile(&["proto/node.proto"], &["proto"])
         .unwrap();
 }
