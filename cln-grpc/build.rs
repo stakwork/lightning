@@ -60,6 +60,7 @@ fn main() {
         .type_attribute(".cln.PayStatus", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.CreateinvoiceResponse", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.CreateinvoiceStatus", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.InvoiceResponse", "#[derive(serde::Serialize)]")
         .compile(&["proto/node.proto"], &["proto"])
         .unwrap();
 }
