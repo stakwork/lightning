@@ -8,6 +8,7 @@ fn main() {
         .type_attribute(".cln.GetinfoAddressType", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.GetinfoBinding", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.GetinfoBindingType", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.Amount", "#[derive(serde::Serialize)]")
         .compile(&["proto/node.proto"], &["proto"])
         .unwrap();
 }
