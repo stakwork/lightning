@@ -9,6 +9,39 @@ fn main() {
         .type_attribute(".cln.GetinfoBinding", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.GetinfoBindingType", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.Amount", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListpeersResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListpeersPeersLog", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListpeersPeersChannels", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListpeersPeersLogType", "#[derive(serde::Serialize)]")
+        .type_attribute(
+            ".cln.ListpeersPeersChannelsState",
+            "#[derive(serde::Serialize)]",
+        )
+        .type_attribute(
+            ".cln.ListpeersPeersChannelsFeerate",
+            "#[derive(serde::Serialize)]",
+        )
+        .type_attribute(
+            ".cln.ListpeersPeersChannelsInflight",
+            "#[derive(serde::Serialize)]",
+        )
+        .type_attribute(".cln.ChannelSide", "#[derive(serde::Serialize)]")
+        .type_attribute(
+            ".cln.ListpeersPeersChannelsFunding",
+            "#[derive(serde::Serialize)]",
+        )
+        .type_attribute(
+            ".cln.ListpeersPeersChannelsAlias",
+            "#[derive(serde::Serialize)]",
+        )
+        .type_attribute(
+            ".cln.ListpeersPeersChannelsHtlcs",
+            "#[derive(serde::Serialize)]",
+        )
+        .type_attribute(
+            ".cln.ListpeersPeersChannelsHtlcsDirection",
+            "#[derive(serde::Serialize)]",
+        )
         .compile(&["proto/node.proto"], &["proto"])
         .unwrap();
 }
