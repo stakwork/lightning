@@ -62,6 +62,10 @@ fn main() {
         .type_attribute(".cln.CreateinvoiceStatus", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.InvoiceResponse", "#[derive(serde::Serialize)]")
         .type_attribute(".cln.AmountOrAny", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListinvoicesResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListinvoicesInvoices", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListpaysResponse", "#[derive(serde::Serialize)]")
+        .type_attribute(".cln.ListpaysPays", "#[derive(serde::Serialize)]")
         .compile(&["proto/node.proto"], &["proto"])
         .unwrap();
 }
