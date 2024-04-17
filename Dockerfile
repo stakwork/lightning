@@ -1,5 +1,7 @@
 # docker build --no-cache -t cln-sphinx .
-# docker run -it --entrypoint "/bin/bash" debian:12-slim
+# docker tag cln-sphinx sphinxlightning/cln:fix-gossip
+# docker push sphinxlightning/cln:fix-gossip
+# 4cfbd6a
 
 # This dockerfile is meant to compile a core-lightning x64 image
 # It is using multi stage build:
