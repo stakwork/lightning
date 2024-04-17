@@ -1,4 +1,5 @@
-# docker build -t cln-sphinx .
+# docker build --no-cache -t cln-sphinx .
+# docker run -it --entrypoint "/bin/bash" debian:12-slim
 
 # This dockerfile is meant to compile a core-lightning x64 image
 # It is using multi stage build:
@@ -45,7 +46,8 @@ FROM debian:12-slim as builder
 
 ENV LIGHTNINGD_VERSION=master
 RUN apt-get update -qq && \
-    apt-get install software-properties-common && \
+    apt-get install software-properties-common -y && \
+    apt-get update -qq && \
     apt-get install -qq -y --no-install-recommends \
     autoconf \
     automake \
@@ -62,7 +64,7 @@ RUN apt-get update -qq && \
     pkg-config \
     libssl-dev \
     protobuf-compiler \
-    python3.9 \
+    python3.11 \
     python3-dev \
     python3-mako \
     python3-pip \
@@ -106,8 +108,9 @@ RUN git clone --recursive /tmp/lightning . && \
 ENV PYTHON_VERSION=3
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
 
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 RUN pip3 install --upgrade pip setuptools wheel
 RUN pip3 wheel cryptography
 RUN pip3 install grpcio-tools
@@ -122,11 +125,13 @@ RUN ./configure --prefix=/tmp/lightning_install --enable-static && \
 FROM debian:12-slim as final
 
 RUN apt-get update && \
+    apt-get install software-properties-common -y && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     tini \
     socat \
     inotify-tools \
-    python3.9 \
+    python3.11 \
     python3-pip \
     qemu-user-static \
     libpq5 && \
@@ -143,7 +148,7 @@ RUN mkdir $LIGHTNINGD_DATA && \
 VOLUME [ "/root/.lightning" ]
 
 COPY --from=builder /tmp/lightning_install/ /usr/local/
-COPY --from=builder /usr/local/lib/python3.9/dist-packages/ /usr/local/lib/python3.9/dist-packages/
+COPY --from=builder /usr/local/lib/python3.11/dist-packages/ /usr/local/lib/python3.11/dist-packages/
 COPY --from=downloader /opt/bitcoin/bin /usr/bin
 COPY --from=downloader /opt/litecoin/bin /usr/bin
 COPY tools/docker-entrypoint.sh entrypoint.sh
