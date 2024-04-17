@@ -1,3 +1,5 @@
+# docker build -t cln-sphinx .
+
 # This dockerfile is meant to compile a core-lightning x64 image
 # It is using multi stage build:
 # * downloader: Download litecoin/bitcoin and qemu binaries needed for core-lightning
@@ -5,11 +7,11 @@
 # * final: Copy the binaries required at runtime
 # The resulting image uploaded to dockerhub will only contain what is needed for runtime.
 # From the root of the repository, run "docker build -t yourimage:yourtag ."
-FROM debian:bullseye-slim as downloader
+FROM debian:12-slim as downloader
 
 RUN set -ex \
-	&& apt-get update \
-	&& apt-get install -qq --no-install-recommends ca-certificates dirmngr wget
+    && apt-get update \
+    && apt-get install -qq --no-install-recommends ca-certificates dirmngr wget
 
 WORKDIR /opt
 
@@ -39,37 +41,38 @@ RUN mkdir /opt/litecoin && cd /opt/litecoin \
     && tar -xzvf litecoin.tar.gz litecoin-$LITECOIN_VERSION/bin/litecoin-cli --strip-components=1 --exclude=*-qt \
     && rm litecoin.tar.gz
 
-FROM debian:bullseye-slim as builder
+FROM debian:12-slim as builder
 
 ENV LIGHTNINGD_VERSION=master
 RUN apt-get update -qq && \
+    apt-get install software-properties-common && \
     apt-get install -qq -y --no-install-recommends \
-        autoconf \
-        automake \
-        build-essential \
-        ca-certificates \
-        curl \
-        dirmngr \
-        gettext \
-        git \
-        gnupg \
-        libpq-dev \
-        libtool \
-        libffi-dev \
-        pkg-config \
-        libssl-dev \
-        protobuf-compiler \
-        python3.9 \
-        python3-dev \
-        python3-mako \
-        python3-pip \
-        python3-venv \
-        python3-setuptools \
-        libev-dev \
-        libevent-dev \
-        qemu-user-static \
-        wget \
-        jq
+    autoconf \
+    automake \
+    build-essential \
+    ca-certificates \
+    curl \
+    dirmngr \
+    gettext \
+    git \
+    gnupg \
+    libpq-dev \
+    libtool \
+    libffi-dev \
+    pkg-config \
+    libssl-dev \
+    protobuf-compiler \
+    python3.9 \
+    python3-dev \
+    python3-mako \
+    python3-pip \
+    python3-venv \
+    python3-setuptools \
+    libev-dev \
+    libevent-dev \
+    qemu-user-static \
+    wget \
+    jq
 
 RUN wget -q https://zlib.net/fossils/zlib-1.2.13.tar.gz \
     && tar xvf zlib-1.2.13.tar.gz \
@@ -116,17 +119,17 @@ RUN ./configure --prefix=/tmp/lightning_install --enable-static && \
     make && \
     /root/.local/bin/poetry run make install
 
-FROM debian:bullseye-slim as final
+FROM debian:12-slim as final
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      tini \
-      socat \
-      inotify-tools \
-      python3.9 \
-      python3-pip \
-      qemu-user-static \
-      libpq5 && \
+    tini \
+    socat \
+    inotify-tools \
+    python3.9 \
+    python3-pip \
+    qemu-user-static \
+    libpq5 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
