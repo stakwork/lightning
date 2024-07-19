@@ -1,3 +1,7 @@
+# docker build --no-cache -t cln-sphinx .
+# docker tag cln-sphinx sphinxlightning/cln:latest
+# docker push sphinxlightning/cln:latest
+
 # This Dockerfile is used by buildx to build ARM64, AMD64, and ARM32 Docker images from an AMD64 host.
 # To speed up the build process, we are cross-compiling rather than relying on QEMU.
 # There are four main stages:
@@ -6,12 +10,12 @@
 # * builder-python: Builds Python dependencies for cln-rest with QEMU.
 # * final: Creates the runtime image.
 
-ARG BASE_DISTRO="debian:bullseye-slim"
+ARG BASE_DISTRO="debian:12-slim"
 
 FROM --platform=$BUILDPLATFORM ${BASE_DISTRO} as base-downloader
 RUN set -ex \
-	&& apt-get update \
-	&& apt-get install -qq --no-install-recommends ca-certificates dirmngr wget qemu-user-static binfmt-support
+    && apt-get update \
+    && apt-get install -qq --no-install-recommends ca-certificates dirmngr wget qemu-user-static binfmt-support
 
 FROM base-downloader as base-downloader-linux-amd64
 ENV TARBALL_ARCH_FINAL=x86_64-linux-gnu
@@ -25,8 +29,8 @@ ENV TARBALL_ARCH_FINAL=arm-linux-gnueabihf
 FROM base-downloader-${TARGETOS}-${TARGETARCH} as downloader
 
 RUN set -ex \
-	&& apt-get update \
-	&& apt-get install -qq --no-install-recommends ca-certificates dirmngr wget
+    && apt-get update \
+    && apt-get install -qq --no-install-recommends ca-certificates dirmngr wget
 
 WORKDIR /opt
 
@@ -56,39 +60,42 @@ RUN mkdir /opt/litecoin && cd /opt/litecoin \
 
 FROM --platform=linux/amd64 ${BASE_DISTRO} as base-builder
 RUN apt-get update -qq && \
+    apt-get install software-properties-common -y && \
+    apt-get update -qq && \
     apt-get install -qq -y --no-install-recommends \
-        autoconf \
-        automake \
-        build-essential \
-        ca-certificates \
-        curl \
-        dirmngr \
-        gettext \
-        git \
-        gnupg \
-        jq \
-        libpq-dev \
-        libtool \
-        libffi-dev \
-        pkg-config \
-        libssl-dev \
-        protobuf-compiler \
-        python3.9 \
-        python3-dev \
-        python3-mako \
-        python3-pip \
-        python3-venv \
-        python3-setuptools \
-        libev-dev \
-        libevent-dev \
-        qemu-user-static \
-        wget \
-        unzip \
-        tclsh
+    autoconf \
+    automake \
+    build-essential \
+    ca-certificates \
+    curl \
+    dirmngr \
+    gettext \
+    git \
+    gnupg \
+    jq \
+    libpq-dev \
+    libtool \
+    libffi-dev \
+    pkg-config \
+    libssl-dev \
+    protobuf-compiler \
+    python3.11 \
+    python3-dev \
+    python3-mako \
+    python3-pip \
+    python3-venv \
+    python3-setuptools \
+    libev-dev \
+    libevent-dev \
+    qemu-user-static \
+    wget \
+    unzip \
+    tclsh
 
 ENV PYTHON_VERSION=3
 RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 RUN pip3 install --upgrade pip setuptools wheel
 
 RUN wget -q https://zlib.net/fossils/zlib-1.2.13.tar.gz -O zlib.tar.gz && \
@@ -113,25 +120,25 @@ ENV target_host=aarch64-linux-gnu \
     target_host_qemu=qemu-aarch64-static
 
 RUN apt-get install -qq -y --no-install-recommends \
-        libc6-arm64-cross \
-        gcc-${target_host} \
-        g++-${target_host}
+    libc6-arm64-cross \
+    gcc-${target_host} \
+    g++-${target_host}
 
 ENV AR=${target_host}-ar \
-AS=${target_host}-as \
-CC=${target_host}-gcc \
-CXX=${target_host}-g++ \
-LD=${target_host}-ld \
-STRIP=${target_host}-strip \
-QEMU_LD_PREFIX=/usr/${target_host} \
-HOST=${target_host} \
-TARGET=${target_host_rust} \
-RUSTUP_INSTALL_OPTS="--target ${target_host_rust} --default-host ${target_host_rust}" \
-PKG_CONFIG_PATH="/usr/${target_host}/lib/pkgconfig"
+    AS=${target_host}-as \
+    CC=${target_host}-gcc \
+    CXX=${target_host}-g++ \
+    LD=${target_host}-ld \
+    STRIP=${target_host}-strip \
+    QEMU_LD_PREFIX=/usr/${target_host} \
+    HOST=${target_host} \
+    TARGET=${target_host_rust} \
+    RUSTUP_INSTALL_OPTS="--target ${target_host_rust} --default-host ${target_host_rust}" \
+    PKG_CONFIG_PATH="/usr/${target_host}/lib/pkgconfig"
 
 ENV \
-ZLIB_CONFIG="--prefix=${QEMU_LD_PREFIX}" \
-SQLITE_CONFIG="--host=${target_host} --prefix=$QEMU_LD_PREFIX"
+    ZLIB_CONFIG="--prefix=${QEMU_LD_PREFIX}" \
+    SQLITE_CONFIG="--host=${target_host} --prefix=$QEMU_LD_PREFIX"
 
 FROM base-builder as base-builder-linux-arm
 
@@ -140,25 +147,25 @@ ENV target_host=arm-linux-gnueabihf \
     target_host_qemu=qemu-arm-static
 
 RUN apt-get install -qq -y --no-install-recommends \
-        libc6-armhf-cross \
-        gcc-${target_host} \
-        g++-${target_host}
+    libc6-armhf-cross \
+    gcc-${target_host} \
+    g++-${target_host}
 
 ENV AR=${target_host}-ar \
-AS=${target_host}-as \
-CC=${target_host}-gcc \
-CXX=${target_host}-g++ \
-LD=${target_host}-ld \
-STRIP=${target_host}-strip \
-QEMU_LD_PREFIX=/usr/${target_host} \
-HOST=${target_host} \
-TARGET=${target_host_rust} \
-RUSTUP_INSTALL_OPTS="--target ${target_host_rust} --default-host ${target_host_rust}" \
-PKG_CONFIG_PATH="/usr/${target_host}/lib/pkgconfig"
+    AS=${target_host}-as \
+    CC=${target_host}-gcc \
+    CXX=${target_host}-g++ \
+    LD=${target_host}-ld \
+    STRIP=${target_host}-strip \
+    QEMU_LD_PREFIX=/usr/${target_host} \
+    HOST=${target_host} \
+    TARGET=${target_host_rust} \
+    RUSTUP_INSTALL_OPTS="--target ${target_host_rust} --default-host ${target_host_rust}" \
+    PKG_CONFIG_PATH="/usr/${target_host}/lib/pkgconfig"
 
 ENV \
-ZLIB_CONFIG="--prefix=${QEMU_LD_PREFIX}" \
-SQLITE_CONFIG="--host=${target_host} --prefix=$QEMU_LD_PREFIX"
+    ZLIB_CONFIG="--prefix=${QEMU_LD_PREFIX}" \
+    SQLITE_CONFIG="--host=${target_host} --prefix=$QEMU_LD_PREFIX"
 
 FROM base-builder-${TARGETOS}-${TARGETARCH} as builder
 
@@ -202,22 +209,23 @@ RUN ./configure --prefix=/tmp/lightning_install --enable-static && \
 FROM ${BASE_DISTRO} as builder-python
 RUN apt-get update -qq && \
     apt-get install -qq -y --no-install-recommends \
-        git \
-        curl \
-        libtool \
-        pkg-config \
-        autoconf \
-        automake \
-        build-essential \
-        libffi-dev \
-        libssl-dev \
-        python3.9 \
-        python3-dev \
-        python3-pip && \
+    git \
+    curl \
+    libtool \
+    pkg-config \
+    autoconf \
+    automake \
+    build-essential \
+    libffi-dev \
+    libssl-dev \
+    python3.11 \
+    python3-dev \
+    python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 ENV PATH=$PATH:/root/.cargo/bin/
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN rustup toolchain install stable --component rustfmt --allow-downgrade
@@ -233,14 +241,16 @@ RUN pip3 install -r plugins/clnrest/requirements.txt && \
 FROM ${BASE_DISTRO} as final
 
 RUN apt-get update && \
+    apt-get install software-properties-common -y && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
-      tini \
-      socat \
-      inotify-tools \
-      jq \
-      python3.9 \
-      python3-pip \
-      libpq5 && \
+    tini \
+    socat \
+    inotify-tools \
+    jq \
+    python3.11 \
+    python3-pip \
+    libpq5 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -254,7 +264,7 @@ RUN mkdir $LIGHTNINGD_DATA && \
 VOLUME [ "/root/.lightning" ]
 
 COPY --from=builder /tmp/lightning_install/ /usr/local/
-COPY --from=builder-python /usr/local/lib/python3.9/dist-packages/ /usr/local/lib/python3.9/dist-packages/
+COPY --from=builder-python /usr/local/lib/python3.11/dist-packages/ /usr/local/lib/python3.11/dist-packages/
 COPY --from=downloader /opt/bitcoin/bin /usr/bin
 COPY --from=downloader /opt/litecoin/bin /usr/bin
 COPY tools/docker-entrypoint.sh entrypoint.sh
