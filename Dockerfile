@@ -1,3 +1,7 @@
+# docker build --no-cache -t cln-sphinx .
+# docker tag cln-sphinx sphinxlightning/cln:latest
+# docker push sphinxlightning/cln:latest
+
 # This Dockerfile is used by buildx to build ARM64, AMD64, and ARM32 Docker images from an AMD64 host.
 # To speed up the build process, we are cross-compiling rather than relying on QEMU.
 # There are four main stages:
@@ -7,7 +11,7 @@
 # * final: Creates the runtime image.
 
 ARG DEFAULT_TARGETPLATFORM="linux/amd64"
-ARG BASE_DISTRO="debian:bullseye-slim"
+ARG BASE_DISTRO="debian:12-slim"
 
 FROM --platform=$BUILDPLATFORM ${BASE_DISTRO} AS base-downloader
 RUN set -ex \
@@ -57,6 +61,8 @@ RUN mkdir /opt/litecoin && cd /opt/litecoin \
 
 FROM --platform=${DEFAULT_TARGETPLATFORM} ${BASE_DISTRO} AS base-builder
 RUN apt-get update -qq && \
+    apt-get install software-properties-common -y && \
+    apt-get update -qq && \
     apt-get install -qq -y --no-install-recommends \
         autoconf \
         automake \
@@ -74,7 +80,7 @@ RUN apt-get update -qq && \
         pkg-config \
         libssl-dev \
         protobuf-compiler \
-        python3.9 \
+        python3.11 \
         python3-dev \
         python3-mako \
         python3-pip \
@@ -90,7 +96,8 @@ RUN apt-get update -qq && \
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHON_VERSION=3
 RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 RUN pip3 install --upgrade pip setuptools wheel
 
 RUN wget -q https://zlib.net/fossils/zlib-1.2.13.tar.gz -O zlib.tar.gz && \
@@ -222,13 +229,14 @@ RUN apt-get update -qq && \
         build-essential \
         libffi-dev \
         libssl-dev \
-        python3.9 \
+        python3.11 \
         python3-dev \
         python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 ENV PYTHON_VERSION=3
 RUN pip3 install --upgrade pip setuptools wheel
 
@@ -253,12 +261,14 @@ WORKDIR /opt/lightningd
 FROM ${BASE_DISTRO} AS final
 
 RUN apt-get update && \
+    apt-get install software-properties-common -y && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
       tini \
       socat \
       inotify-tools \
       jq \
-      python3.9 \
+      python3.11 \
       python3-pip \
       libpq5 && \
     apt-get clean && \
@@ -274,7 +284,7 @@ RUN mkdir $LIGHTNINGD_DATA && \
 VOLUME [ "/root/.lightning" ]
 
 COPY --from=builder /tmp/lightning_install/ /usr/local/
-COPY --from=builder-python /usr/local/lib/python3.9/dist-packages/ /usr/local/lib/python3.9/dist-packages/
+COPY --from=builder-python /usr/local/lib/python3.11/dist-packages/ /usr/local/lib/python3.11/dist-packages/
 COPY --from=downloader /opt/bitcoin/bin /usr/bin
 COPY --from=downloader /opt/litecoin/bin /usr/bin
 COPY tools/docker-entrypoint.sh entrypoint.sh
