@@ -7,7 +7,7 @@
 # * final: Creates the runtime image.
 
 ARG DEFAULT_TARGETPLATFORM="linux/amd64"
-ARG BASE_DISTRO="debian:bullseye-slim"
+ARG BASE_DISTRO="debian:12-slim"
 
 FROM --platform=$BUILDPLATFORM ${BASE_DISTRO} AS base-downloader
 RUN set -ex \
@@ -57,6 +57,7 @@ RUN mkdir /opt/litecoin && cd /opt/litecoin \
 
 FROM --platform=${DEFAULT_TARGETPLATFORM} ${BASE_DISTRO} AS base-builder
 RUN apt-get update -qq && \
+    apt-get install software-properties-common -y && \
     apt-get install -qq -y --no-install-recommends \
         autoconf \
         automake \
@@ -74,7 +75,7 @@ RUN apt-get update -qq && \
         pkg-config \
         libssl-dev \
         protobuf-compiler \
-        python3.9 \
+        python3.11 \
         python3-dev \
         python3-mako \
         python3-pip \
@@ -89,8 +90,10 @@ RUN apt-get update -qq && \
 
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHON_VERSION=3
-RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    poetry self add poetry-plugin-export
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 RUN pip3 install --upgrade pip setuptools wheel
 
 RUN wget -q https://zlib.net/fossils/zlib-1.2.13.tar.gz -O zlib.tar.gz && \
@@ -102,7 +105,9 @@ RUN git clone --recursive /tmp/lightning . && \
     git checkout $(git --work-tree=/tmp/lightning --git-dir=/tmp/lightning/.git rev-parse HEAD)
 
 # Do not build python plugins (clnrest & wss-proxy) here, python doesn't support cross compilation.
-RUN sed -i '/^clnrest\|^wss-proxy/d' pyproject.toml && poetry export -o requirements.txt --without-hashes
+RUN sed -i '/^clnrest\|^wss-proxy/d' pyproject.toml && \
+    poetry lock && \
+    poetry export -o requirements.txt --without-hashes
 RUN pip3 install -r requirements.txt && pip3 cache purge
 WORKDIR /
 
@@ -197,7 +202,8 @@ RUN ( ! [ "${target_host}" = "arm-linux-gnueabihf" ] ) || \
 
 # Ensure that the desired grpcio-tools & protobuf versions are installed
 # https://github.com/ElementsProject/lightning/pull/7376#issuecomment-2161102381
-RUN poetry lock --no-update && poetry install
+RUN poetry lock && poetry install && \
+    poetry self add poetry-plugin-export
 
 # Ensure that git differences are removed before making bineries, to avoid `-modded` suffix
 # poetry.lock changed due to pyln-client, pyln-proto and pyln-testing version updates
@@ -208,9 +214,9 @@ RUN ./configure --prefix=/tmp/lightning_install --enable-static && poetry run ma
 
 # Export the requirements for the plugins so we can install them in builder-python stage
 WORKDIR /opt/lightningd/plugins/clnrest
-RUN poetry export -o requirements.txt --without-hashes
+RUN poetry lock && poetry export -o requirements.txt --without-hashes
 WORKDIR /opt/lightningd/plugins/wss-proxy
-RUN poetry export -o requirements.txt --without-hashes
+RUN poetry lock && poetry export -o requirements.txt --without-hashes
 WORKDIR /opt/lightningd
 RUN echo 'RUSTUP_INSTALL_OPTS="${RUSTUP_INSTALL_OPTS}"' > /tmp/rustup_install_opts.txt
 
@@ -227,13 +233,14 @@ RUN apt-get update -qq && \
         build-essential \
         libffi-dev \
         libssl-dev \
-        python3.9 \
+        python3.11 \
         python3-dev \
         python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 ENV PYTHON_VERSION=3
 RUN pip3 install --upgrade pip setuptools wheel
 
@@ -258,12 +265,13 @@ WORKDIR /opt/lightningd
 FROM ${BASE_DISTRO} AS final
 
 RUN apt-get update && \
+    apt-get install software-properties-common -y && \
     apt-get install -y --no-install-recommends \
       tini \
       socat \
       inotify-tools \
       jq \
-      python3.9 \
+      python3.11 \
       python3-pip \
       libpq5 && \
     apt-get clean && \
@@ -279,7 +287,7 @@ RUN mkdir $LIGHTNINGD_DATA && \
 VOLUME [ "/root/.lightning" ]
 
 COPY --from=builder /tmp/lightning_install/ /usr/local/
-COPY --from=builder-python /usr/local/lib/python3.9/dist-packages/ /usr/local/lib/python3.9/dist-packages/
+COPY --from=builder-python /usr/local/lib/python3.11/dist-packages/ /usr/local/lib/python3.11/dist-packages/
 COPY --from=downloader /opt/bitcoin/bin /usr/bin
 COPY --from=downloader /opt/litecoin/bin /usr/bin
 COPY tools/docker-entrypoint.sh entrypoint.sh
